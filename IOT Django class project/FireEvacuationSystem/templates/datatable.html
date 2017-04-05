@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en">
+<head>
+     <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href={% static "Font-Awesome-4.7/css/font-awesome.min.css" %}>
+    <link rel="stylesheet" type="text/css" href={% static "css/bootstrap.min.css" %}>
+    <link rel="stylesheet" type="text/css" href={% static "css/templatemo-style.css" %}>
+    <link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js">
+    </script>
+    <title> Data Table</title>
+</head>
+    <table id="example">
+    <thead>
+      <tr>
+        <th>Time Stamp</th>
+        <!-- <th>Temperature</th>
+        <th>Humidity</th> -->
+      </tr>
+    </thead>
+    <tbody>
+         {% for ele in datatoshow %} 
+      <tr>
+        <td>{{ele.ServerTimestamp}}</td>
+        <td>{{ele.temperature}}</td>
+        <td>{{ele.humidity}}</td>
+    
+  </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+<script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>
+  <script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+  <script>
+  $(function(){
+    $("#example").dataTable();
+  })
+  </script>
+    
+<body>    
+    

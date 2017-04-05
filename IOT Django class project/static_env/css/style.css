@@ -1,0 +1,154 @@
+.navbar-static-top {
+  margin-bottom: 0px;
+  background-color: #337ab7;
+}
+.navbar-default .navbar-brand {
+    color: #FFFFFF;
+}
+.navbar-default .navbar-nav>li>a {
+    color: #FFFFFF;
+}
+.jumbotron {
+    padding-top: 25px;
+    padding-bottom: 25px;
+    background-color: #337ab7;
+    color:#FFFFFF;
+ }
+.footer {
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    padding-top: 25px;
+    padding-bottom: 15px;
+    margin-top:1px;
+    background-color: #337ab7;
+    color:#FFFFFF;
+}
+.footerText{
+	text-align: center;
+}
+/*
+ 	TILES - PROJECTS, DEVICES AND SENSORS
+ */
+.huge {
+  font-size: 50px;
+}
+.medium {
+  font-size: 30px;
+}
+.tiles {
+	min-height: 150px;
+}
+.panel-green {
+  border-color: #5cb85c;
+}
+.panel-green > .panel-heading {
+  border-color: #5cb85c;
+  color: white;
+  background-color: #5cb85c;
+}
+.panel-green > a {
+  color: #5cb85c;
+}
+.panel-green > a:hover {
+  color: #3d8b3d;
+}
+.panel-red {
+  border-color: #d9534f;
+}
+.panel-red > .panel-heading {
+  border-color: #d9534f;
+  color: white;
+  background-color: #d9534f;
+}
+.panel-red > a {
+  color: #d9534f;
+}
+.panel-red > a:hover {
+  color: #b52b27;
+}
+.panel-orange {
+  border-color: #f0a04e;
+}
+.panel-orange > .panel-heading {
+  border-color: #f0a04e;
+  color: white;
+  background-color: #f0a04e;
+}
+.panel-orange > a {
+  color: #f0ad4e;
+}
+.panel-orange > a:hover {
+  color: #df8a13;
+}
+.list-items{
+	min-height: 400px;
+	max-height: 400px;
+	overflow-y:auto; 
+}
+.list-item-details{
+	min-height: 600px;
+  margin-left: -20px;
+}
+.section-header {
+    background-color: #5cb85c !important;
+    color: #ffffff !important;
+    border-radius: 0px;
+    height: 60px;
+    padding: 19px;
+}
+.section-header-title{
+	font-size: 20px !important;
+}
+.inner-panel{
+
+	margin:5px;
+}
+.inner-panel .section-header{
+	padding: 10px;
+	height: 40px;
+	background-color: #d46338 !important;
+}
+.sensor-list option{
+	padding: 10px;
+    background-color: #5cb85c;
+    margin: 5px;
+    color: #ffffff;
+}
+.sensor-tiles-button {
+    
+}
+.sensor-tiles {
+    background-color: #5bc0de;
+    color: #ffffff;
+    cursor: pointer;
+}
+.sensor-tiles .panel-body{
+	min-height: 80px;
+	max-height: 80px;
+}
+.sensor-list{
+	min-height: 300px;
+	max-height: 300px;
+	overflow-y: auto;
+	margin-right: -1px;
+}
+.item-list{
+  min-height: 500px;
+  height:100vh;
+  background-color: #eee;
+}
+.chartcontainer{
+  overflow: auto;
+  overflow-y: hidden;
+}
+.chart-panel{
+  min-height: 400px;
+}
+.chart-panel-row{
+  margin-left: 10px;
+  margin-right: -25px;
+}
+.margin-right-5px{
+    margin-right: 5px;
+}

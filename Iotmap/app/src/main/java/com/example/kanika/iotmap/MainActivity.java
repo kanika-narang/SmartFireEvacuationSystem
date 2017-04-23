@@ -1,11 +1,24 @@
 package com.example.kanika.iotmap;
 
 import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import org.json.simple.JSONArray;
+import org.json.simple.parser.JSONParser;
+
 import android.graphics.Bitmap;
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -18,10 +31,12 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.NotificationCompat;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
@@ -31,6 +46,9 @@ import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
+
+//import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,7 +60,7 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-
+//to show the fire/exit locations on the map
 class MyCanvas extends View {
     Coordinate fireL;
     Coordinate safeL;
@@ -65,6 +83,7 @@ class MyCanvas extends View {
             canvas.drawCircle((int) safeL.x, (int) safeL.y, 10, pBackground);
             pBackground.setColor(Color.RED);
             canvas.drawCircle((int) fireL.x, (int) fireL.y, 10, pBackground);
+
         
         }
 }
@@ -98,12 +117,17 @@ public class MainActivity extends AppCompatActivity /*implements View.OnTouchLis
     BroadcastReceiver broadcastReceiver;
     Coordinate NewNearExit=new Coordinate();
     Coordinate userlocation=new Coordinate();
+    RouterInformation UserRouterLocation=new RouterInformation();
     int userId=0;
     Coordinate firelocation=new Coordinate();
     EInfo exitNearFire=new EInfo();
     EInfo nearestSafeExit=new EInfo();
     Coordinate OldSafeExit=new Coordinate();
     boolean fire=false;
+    boolean notifiedaboutfire=false;
+    int userandroidid=0;
+    int countofalarm=0;
+
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -119,6 +143,7 @@ public class MainActivity extends AppCompatActivity /*implements View.OnTouchLis
         iv = (ImageView) findViewById(R.id.mapimageview);
         iv.getLayoutParams().width=762;
         iv.getLayoutParams().height=2000;
+        mediaPlayer= MediaPlayer.create(this, R.raw.firealarm);
 
         // iv.setOnTouchListener(this);
 
@@ -179,6 +204,12 @@ public class MainActivity extends AppCompatActivity /*implements View.OnTouchLis
     public void getWifiNetworksList(long millisUntilFinished) {
         android_id = Settings.Secure.getString(this.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
+
+        System.out.println("Android Id............" + android_id);
+        System.out.println("userid ......................"+Math.abs(android_id.hashCode()/100000));
+        userandroidid=Math.abs(android_id.hashCode()/10000);
+        senduserdata();
+        System.out.println("sent//////////////////");
         // Get List of Wifi
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
@@ -241,11 +272,12 @@ public class MainActivity extends AppCompatActivity /*implements View.OnTouchLis
                                     System.out.println("\n -------- --------- \n ");
                                     BSSIDFound = true;
 
-                                    userlocation.x=rInfo[i].lattitude;
-                                    userlocation.y=rInfo[i].longitude;
-                                    userId=rInfo[i].id;
-                                    System.out.println(userlocation.x+" "+userlocation.y);
-                                    Toast.makeText(getBaseContext(), "Room:"+rInfo[i].roomNumber+" x="+rInfo[i].lattitude+" y= "+ rInfo[i].longitude, Toast.LENGTH_SHORT).show();
+                                    userlocation.x = rInfo[i].lattitude;
+                                    userlocation.y = rInfo[i].longitude;
+                                    userId = rInfo[i].id;
+                                    UserRouterLocation = rInfo[i];
+                                    System.out.println(userlocation.x + " " + userlocation.y);
+                                    // Toast.makeText(getBaseContext(), "Room:"+rInfo[i].roomNumber+" x="+rInfo[i].lattitude+" y= "+ rInfo[i].longitude, Toast.LENGTH_SHORT).show();
 
                                     //Check for internet connection and Insert into mysql database
 
@@ -255,11 +287,19 @@ public class MainActivity extends AppCompatActivity /*implements View.OnTouchLis
                             }
                             if (BSSIDFound == false) {
                                 System.out.println("\n NO LOCATION INFORMATION AVAILABLE BUT YOU ARE CONNECTED TO INTERNET!! \n ");
-                                System.out.println(userlocation.x+" "+userlocation.y);
-                                userlocation.x=0;
-                                userlocation.y=0;
-                                System.out.println(userlocation.x+" "+userlocation.y);
-                                Toast.makeText(getBaseContext(), " NO LOCATION ", Toast.LENGTH_SHORT).show();
+                                System.out.println(userlocation.x + " " + userlocation.y);
+                                userlocation.x = 0;
+                                userlocation.y = 0;
+                                System.out.println(userlocation.x + " " + userlocation.y);
+                            final Toast    t2 = Toast.makeText(getBaseContext(), "No Location Found", Toast.LENGTH_SHORT);
+                                t2.show();
+                                Handler handler = new Handler();
+                                handler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        t2.cancel();
+                                    }
+                                }, 1000);
                                 System.out.println("\n -------- --------- \n ");
                             }
                         } else {
@@ -284,45 +324,97 @@ public class MainActivity extends AppCompatActivity /*implements View.OnTouchLis
 
         this.registerReceiver(broadcastReceiver, filter);
         wifiManager.startScan();
-
+        System.out.println("FIREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
         setFire();
-        if(fire==true)
-        {
+        if (fire == true) {
+
+            System.out.println("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh");
             // If fire is true turn on the alarm
-            mediaPlayer= MediaPlayer.create(this, R.raw.firealarm);
-           // mediaPlayer.start();
+            if (notifiedaboutfire == false) {
+                notify(this, 1, "FIRE", "Please Evacuate the building", null);
+
+                mediaPlayer.start();
+                notifiedaboutfire = true;
+            } else {
+                if (countofalarm == 500) {
+                    mediaPlayer.stop();
+                } else {
+                    countofalarm++;
+                }
+
+            }
             //get the nearest fire exit location
             getExitNearFire();
             // get  safest nearest location
             getnearestExit();
-            NewNearExit.x=(int)nearestSafeExit.x;
-            NewNearExit.y=(int)nearestSafeExit.y;
-            boolean change=getchange(OldSafeExit,NewNearExit);
-            if(change==true) {
+            NewNearExit.x = (int) nearestSafeExit.x;
+            NewNearExit.y = (int) nearestSafeExit.y;
+            boolean change = getchange(OldSafeExit, NewNearExit);
+            System.out.println(change);
+            if (change == true) {
 
                 View v1 = new MyCanvas(getApplicationContext(), firelocation, "GREEN", NewNearExit);
                 Bitmap bitmap1 = Bitmap.createBitmap(762, 2000, Bitmap.Config.ARGB_8888);
                 Canvas canvas1 = new Canvas(bitmap1);
                 v1.draw(canvas1);
                 iv.setImageBitmap(bitmap1);
-
+                final Toast t1;
                 if (paths.Map.containsKey(userId)) {
                     List<String> exitPaths = paths.Map.get(userId).path;
                     if (nearestSafeExit.ExitId == 1) {
-                        Toast.makeText(getBaseContext(), exitPaths.get(2), Toast.LENGTH_SHORT).show();
+                        t1 = Toast.makeText(getBaseContext(), "User Loaction " + UserRouterLocation.roomNumber + " Nearest Exit " + exitPaths.get(2), Toast.LENGTH_SHORT);
+                        t1.show();
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                t1.cancel();
+                            }
+                        }, 1500);
+                        //   notifylocation(this,1,"Location","User Loaction "+UserRouterLocation.roomNumber+" Nearest Exit "+exitPaths.get(2),null);
 
                     } else if (nearestSafeExit.ExitId == 2) {
-                        Toast.makeText(getBaseContext(), exitPaths.get(1), Toast.LENGTH_SHORT).show();
+                        t1 = Toast.makeText(getBaseContext(), "User Loaction " + UserRouterLocation.roomNumber + " Nearest Exit " + exitPaths.get(1), Toast.LENGTH_SHORT);
+                        t1.show();
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                t1.cancel();
+                            }
+                        }, 1500);
+                        //  notifylocation(this,1,"Location","User Loaction "+UserRouterLocation.roomNumber+" Nearest Exit "+exitPaths.get(1),null);
                     } else if (nearestSafeExit.ExitId == 3) {
-                        Toast.makeText(getBaseContext(), exitPaths.get(0), Toast.LENGTH_SHORT).show();
+                        t1 = Toast.makeText(getBaseContext(), "User Loaction " + UserRouterLocation.roomNumber + " Nearest Exit " + exitPaths.get(0), Toast.LENGTH_SHORT);
+                        t1.show();
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                t1.cancel();
+                            }
+                        }, 1500);
+                        // notifylocation(this,1,"Location","User Loaction "+UserRouterLocation.roomNumber+" Nearest Exit "+exitPaths.get(0),null);
                     } else if (nearestSafeExit.ExitId == 4) {
-                        Toast.makeText(getBaseContext(), exitPaths.get(3), Toast.LENGTH_SHORT).show();
+                        t1 = Toast.makeText(getBaseContext(), "User Loaction " + UserRouterLocation.roomNumber + " Nearest Exit " + exitPaths.get(3), Toast.LENGTH_SHORT);
+                        t1.show();
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                t1.cancel();
+                            }
+                        }, 1500);
+                        //  notifylocation(this,1,"Location","User Loaction "+UserRouterLocation.roomNumber+" Nearest Exit "+exitPaths.get(3),null);
                     }
+
+
+
                 }
             }
+
+
         }
-
-
     }
 
 
@@ -494,11 +586,175 @@ public class MainActivity extends AppCompatActivity /*implements View.OnTouchLis
 
     public void setFire()
     {
-        fire=true;
+        final JSONObject json1 = new JSONObject();
+        try {
+            json1.put("num_records","1");
+            json1.put("sensor_token", "bzr4f033oy97md7e");
+            json1.put("device_token", "sya0c85x69fwl9ol");
+        }catch (Exception e) {
+            System.out.println("error " + e);
+        }
+        RequestQueue queue = Volley.newRequestQueue(this);
+        String url ="http://theiotdashboard.tk/api/getsensordata/";
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+
+                    @Override
+                    public void onResponse(String response) {
+                        // your response
+                        try{
+                            //JSONParser parser_obj = new JSONParser();
+                            System.out.println("Hi");
+
+                            System.out.println("Done...........................");
+                            //  System.out.println(json);
+                            System.out.println("--------------------------");
+                            System.out.println(response);
+                            System.out.println("--------------------------");
+
+                            String data_json=response.substring(1,response.length()-1);
+                            String st=data_json.replace("\\","");
+
+                            JSONObject newjson=new JSONObject(st);
+                            System.out.println("Done..............."+newjson);
+                            org.json.JSONArray ja=newjson.getJSONArray("data");
+                            System.out.println(ja);
+
+                            org.json.JSONArray ja0= ja.getJSONArray(0);
+                            System.out.println("JSONARRAY.........."+ja0);
+                            String jaFire=ja0.getString(0);
+                            System.out.println("Fire......."+jaFire);
+                            if(jaFire.equals("1")){fire=true;}else{fire=false;}
+                            System.out.println("fffffffffffffff "+fire);
+
+
+
+                        }
+                        catch(Exception error){
+                            System.out.println("error.........."+error);
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // error
+            }
+        })
+        {
+            @Override
+            public byte[] getBody() throws AuthFailureError {
+                //   String your_string_json = ; // put your json
+                return json1.toString().getBytes();
+            }
+
+            @Override
+            public String getBodyContentType()
+            {
+                return "application/json";
+            }
+        };
+        // Add the request to the RequestQueue.
+        queue.add(stringRequest);
+        queue.start();
+
         firelocation.x=360;
         firelocation.y=1800;
     }
 
+
+
+   /* public void setFire()
+    {
+        final JSONObject json1 = new JSONObject();
+
+
+        try {
+            *//*json1.put("userid", "37");
+            json1.put("x", "10.11");
+            json1.put("y", "11.12");
+            *//*
+            json1.put("num_records","1");
+            json1.put("sensor_token", "bzr4f033oy97md7e");
+            json1.put("device_token", "sya0c85x69fwl9ol");
+            *//*json1.put("latitude","1");
+            json1.put("longitude", "bzr4f033oy97md7e");
+            json1.put("destination", "sya0c85x69fwl9ol");
+        *//*} catch (Exception e) {
+            System.out.println("error " + e);
+
+        }
+        RequestQueue queue = Volley.newRequestQueue(this);
+       String url ="http://theiotdashboard.tk/api/getsensordata/";
+       // String url="http://139.59.33.166:8080/JSONServlet";
+        System.out.println(json1.toString());
+        // Request a string response from the provided URL.
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<JSONObject>() {
+
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        // your response
+                        try{
+                        //JSONParser parser_obj = new JSONParser();
+                            System.out.println("Hi");
+                           *//* String temp = "{\"header\": [\"Fire\", \"ServerTimestamp\"], \"data\": [[\"1\", \"2017/04/10 21:45:46\"]], \"error\": {}}";
+                            System.out.println(temp);*//*
+                           // JSONObject json = (JSONObject) new JSONParser().parse(response);
+
+                            System.out.println("Done...........................");
+                          //  System.out.println(json);
+                        System.out.println("--------------------------");
+                        System.out.println(response);
+                        System.out.println("--------------------------");
+                          *//*  String  ss="{\"header\": [\"Fire\", \"ServerTimestamp\"],\"data\": [[\"1\", \"2017/04/10 21:45:46\"]], \"error\": {}}";
+                           // String ss=response;
+                            JSONObject obj = new JSONObject(ss);
+                            System.out.println(" bbbbbbbbbbbbbbbbb"+obj);
+*//*
+                           *//* System.out.println("..................."+ss.charAt(0)+"..........."+ss.charAt(ss.length()-1));
+                            String result=ss.substring(1,ss.length()-1);
+                            System.out.println("qqqqqqqqqqqqqqqqqqqqqqqq"+result);
+                           *//* //JSONObject obj2 = new JSONObject(result);
+                            System.out.println(" bbbbbbbbbbbbbbbbb"+obj2);
+                            *//*org.json.JSONArray arr=new org.json.JSONArray(obj.getString("data"));
+                            int firereading=Integer.parseInt(arr.get(0).toString());
+                            if(firereading==1){fire=true;}else{fire=false;}
+                            System.out.println("------fire--------------------");
+                            System.out.println(firereading);
+                            *//*System.out.println("-----------fire---------------");
+                        }
+                        catch(Exception error){
+                            System.out.println("error.........."+error);
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // error
+            }
+        }){
+            @Override
+            public byte[] getBody() throws AuthFailureError {
+                //   String your_string_json = ; // put your json
+                return json1.toString().getBytes();
+            }
+
+            @Override
+            public String getBodyContentType()
+            {
+                return "application/json";
+            }
+        };
+        // Add the request to the RequestQueue.
+        queue.add(stringRequest);
+        queue.start();
+
+        firelocation.x=360;
+        firelocation.y=1800;
+    }
+*/
 
     public void getExitDirection()
     {
@@ -513,4 +769,106 @@ public class MainActivity extends AppCompatActivity /*implements View.OnTouchLis
         }
         return true;
     }
-};
+
+
+
+
+    public static void notify(Context context, int id, String titleResId, String textResId, PendingIntent intent) {
+
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        String title = titleResId;
+        String text = textResId;
+
+        android.support.v4.app.NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+                .setSmallIcon(R.drawable.image)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .setWhen(System.currentTimeMillis())
+                .setTicker(title)
+                .setContentIntent(intent);
+        notificationManager.notify(id, builder.build());
+    }
+
+    public  void senduserdata()
+    {
+        String sensor_token="m5luoy1i59r97wlo";
+        String device_token="undgkdo1moudqkpc";
+        String url="http://theiotdashboard.tk/api/send/";
+        final JSONObject json1 = new JSONObject();
+        try {
+            json1.put("userid",userandroidid);
+            json1.put("x","1");
+            json1.put("y","1");
+            json1.put("sensor_token", sensor_token);
+            json1.put("device_token", device_token);
+        }catch (Exception e) {
+            System.out.println("error " + e);
+        }
+
+        RequestQueue queue = Volley.newRequestQueue(this);
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+
+                    @Override
+                    public void onResponse(String response) {
+                        // your response
+                        try{
+                            //JSONParser parser_obj = new JSONParser();
+                            System.out.println("Hi");
+
+                            System.out.println("Done...........................");
+                            //  System.out.println(json);
+                            System.out.println("--------------------------");
+                            System.out.println(response);
+                            System.out.println("--------------------------");
+
+                           /* String data_json=response.substring(1,response.length()-1);
+                            String st=data_json.replace("\\","");
+
+                            JSONObject newjson=new JSONObject(st);
+                            System.out.println("Done..............."+newjson);
+                            org.json.JSONArray ja=newjson.getJSONArray("data");
+                            System.out.println(ja);
+
+                            org.json.JSONArray ja0= ja.getJSONArray(0);
+                            System.out.println("JSONARRAY.........."+ja0);
+                            String jaFire=ja0.getString(0);
+                            System.out.println("Fire......."+jaFire);*/
+
+
+
+                        }
+                        catch(Exception error){
+                            System.out.println("error.........."+error);
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // error
+            }
+        })
+        {
+            @Override
+            public byte[] getBody() throws AuthFailureError {
+                //   String your_string_json = ; // put your json
+                return json1.toString().getBytes();
+            }
+
+            @Override
+            public String getBodyContentType()
+            {
+                return "application/json";
+            }
+        };
+        // Add the request to the RequestQueue.
+        queue.add(stringRequest);
+        queue.start();
+
+    }
+
+}

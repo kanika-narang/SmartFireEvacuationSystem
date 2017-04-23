@@ -44,13 +44,13 @@ public class ExitLocationInformation {
         eInfo[2].x=342;
         eInfo[2].y=39;
         eInfo[2].ExitId=3;
-        eInfo[2].ExitName="Exit Towards Main Gate of Campus";
+        eInfo[2].ExitName="Network Lab Exit";
 
         //exit4 exit from the Back Gate
         eInfo[3].x=352;
         eInfo[3].y=1976;
         eInfo[3].ExitId=4;
-        eInfo[3].ExitName=" Exit from the Back Gate";
+        eInfo[3].ExitName="Director Sir Room's Exit";
 
         return eInfo;
 

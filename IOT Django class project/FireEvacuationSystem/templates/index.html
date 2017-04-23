@@ -18,74 +18,135 @@
 Catalyst Template
 http://www.templatemo.com/tm-499-catalyst
 -->
+
 </head>
 
 <body>
-    
     <div class="container">
         <section class="col-md-12 content" id="home">
-           <div class="col-lg-6 col-md-6 content-item tm-black-translucent-bg tm-logo-box">
+           <div class="col-lg-6 col-md-6 content-item tm-white-translucent-bg tm-logo-box">
               <i class="fa fa-fire fa-4x tm-logo"></i>
               <h1 class="text-uppercase">Smart Fire Evacuation System</h1>
                
-           </div>
-           <div class="col-lg-6 col-md-6 content-item content-item-1 background tm-white-translucent-bg">
-               <h2 class="main-title text-center dark-blue-text">Smoke Sensor</h2>
-               <p>Sed tempus, quam vitae lobortis vulputate, sapien nisi ultricies metus, in eleifend ipsum mauris eget magna. Nullam massan-title text-center dark-blue-text">Smoke Sensor</h2>
-               <p>Sed tempus, nisi, pellentesque eu pretium quis, pulvinar a nulla. Sed tempus finibus lacus, vestibulu1m condimentum nibh blandit vel.</p> 
-               <div>
-               <h2 class="main-title text-center dark-blue-text">Flame Sensor</h2>
-               <table id="example">
-    <thead>
-      <tr><th>Sites</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>SitePoint</td></tr>
-      <tr><td>Learnable</td></tr>
-      <tr><td>Flippa</td></tr>
-    </tbody>
-  </table>
-  <script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>
-  <script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
-  <script>
-  $(function(){
-    $("#example").dataTable();
-  })
-  </script>
-             </div>
+
+             <h2 class="main-title text-center dark-white-text">Smoke Sensor</h2>
+               <div id="smokeSensor">
+               </div>  
                
-               <h2 class="main-title text-center dark-blue-text">Temperature Sensor</h2>
-             
-             <div id="TempSensor">
-
-
-                    <script>
+               <script>
                     $(document).ready(function(){
+                        //debugger;
                         
-                            $.ajax({url: "/DetectingFire/get_data_toshow/", success: function(result){
+                            $.ajax({url: "/DetectingFire/get_data_toshow/", data:{"callto":"smoke"},success: function(result){
                                 data = JSON.parse(result);
                                             if(data.datatoshow != "")
                                             {
                                               // success
-                                              debugger;
-                                              $("#TempSensor").html(data.datatoshow);
+                                             // debugger;
+                                              $("#smokeSensor").html(data.datatoshow);
+                                }
+                                else{
+                                  $("#smokeSensor").html("Nooooooooo");
                                 }
                             }});
                         
                     });
                   
-                    </script>
+                    </script>            
 
-               </div>              
+               <div>
+               <h2 class="main-title text-center dark-blue-text">Flame Sensor</h2>
+               <div id="flameSensor">
+               </div>  
+               
+               <script>
+                    $(document).ready(function(){
+                     //   debugger;
+                        
+                            $.ajax({url: "/DetectingFire/get_data_toshow/", data:{"callto":"flame"},success: function(result){
+                                data = JSON.parse(result);
+                                            if(data.datatoshow != "")
+                                            {
+                                              // success
+                                              //debugger;
+                                              $("#flameSensor").html(data.datatoshow);
+                                }
+                                else{
+                                  $("#flameSensor").html("Nooooooooo");
+                                }
+                            }});
+                        
+                    });
+                  
+                    </script>            
+             </div>
+                 
+
            </div>
+
+           <div class="col-lg-6 col-md-6 content-item content-item-1 background tm-white-translucent-bg">
+               
+               <h2 class="main-title text-center dark-blue-text">Temperature Sensor</h2>
+             
+             <div id="tempSensor">
+               </div>  
+               {% csrf_token %}
+               <script>
+                    $(document).ready(function(){
+                        //debugger;
+                            $.ajax({url: "/DetectingFire/get_data_toshow/", data:{"callto":"temp"},success: function(result){
+                                data = JSON.parse(result);
+                                            if(data.datatoshow != "")
+                                            {
+                                              // success
+                                             // debugger;
+                                              $("#tempSensor").html(data.datatoshow);
+                                }
+                                else{
+                                  $("#tempSensor").html("Nooooooooo");
+                                }
+                            }});
+                        
+                    });
+                  
+                    </script>            
+          
+
+
+            <h2 class="main-title text-center dark-blue-text">User Details</h2>
+             
+             <div id="userSensor">
+               </div>  
+               {% csrf_token %}
+               <script>
+                    $(document).ready(function(){
+                      //  debugger;
+                            $.ajax({url: "/DetectingFire/get_data_toshow/", data:{"callto":"user"},success: function(result){
+                                data = JSON.parse(result);
+                                            if(data.datatoshow != "")
+                                            {
+                                              // success
+                                         //     debugger;
+                                              $("#userSensor").html(data.datatoshow);
+                                }
+                                else{
+                                  $("#userSensor").html("Nooooooooo");
+                                }
+                            }});
+                        
+                    });
+                  
+                    </script>            
+           </div>
+
        </section>
 
        <section class="col-md-12 content padding tm-equal-col-container" id="services">
         <div class="col-lg-6 col-md-6 col-sm-12 content-item tm-black-translucent-bg tm-services-section-padding">
-          <h2 class="main-title text-center dark-blue-text">.02 Mauris viverra</h2>
+          <!-- <h2 class="main-title text-center dark-blue-text">.02 Mauris viverra</h2>
            <p>Morbi vestibulum convallis dui, in tristique neque malesuada eleifend. Sed tempus, quam vitae lobortis vulputate, sapien nisi ultricies metus, in eleifend ipsum mauris eget magna.</p>
            <p>In dapibus blandit congue. Sed quam nulla, pellentesque eget metus eu, sollicitudin sodales nisl. Integer tempus id lectus quis cursus.</p>
-           <button type="button" class="btn btn-big pull-right tm-btn-primary">Read More</button>
+           <button type="button" class="btn btn-big pull-right tm-btn-primary">Read More</button> -->
        </div>
        <div class="col-lg-6 col-md-6 col-sm-12 tm-white-translucent-bg tm-services-section-padding tm-box-center">
 
@@ -196,6 +257,36 @@ http://www.templatemo.com/tm-499-catalyst
 
 </script>
  -->
+
+
+ <script type="text/javascript">
+
+function getfirestatus(){
+$.ajax({url: "/DetectingFire/getFIREorMissdetail/",success: function(result){
+                                data = JSON.parse(result);
+                                            if(data.fire == "1")
+                                            {
+                                              alert('fire is '+data.fire);
+                                              /*var audio = {{MEDIA_URL}}audio/firealarm.mp3}}
+                                              document.write('<audio autoplay="autoplay">');
+document.write('<source src="'+audio+'" type="audio/mpeg">');
+document.write('</audio>');*/
+                                             
+                                              // success
+                                            
+                                }
+                                else if(data.miss=="1")
+                                {
+                                 alert('miss is '+data.miss); 
+                                }
+                            }
+                          });   
+
+                          }
+
+setInterval(getfirestatus, 15000);
+
+ </script>
 </body>
 </html>
 
